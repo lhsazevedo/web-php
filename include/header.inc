@@ -94,26 +94,50 @@ if (!isset($config["languages"])) {
 </head>
 <body class="<?php echo $curr; ?> <?php echo $classes; ?>">
 
-<nav id="head-nav" class="navbar navbar-fixed-top">
-  <div class="navbar-inner clearfix">
-    <a href="/" class="brand"><img src="/images/logos/php-logo.svg" width="48" height="24" alt="php"></a>
-    <div id="mainmenu-toggle-overlay"></div>
-    <input type="checkbox" id="mainmenu-toggle">
-    <ul class="nav">
-      <li class="<?php echo $curr == "downloads" ? "active" : ""?>"><a href="/downloads">Downloads</a></li>
-      <li class="<?php echo $curr == "docs" ? "active" : ""?>"><a href="/docs.php">Documentation</a></li>
-      <li class="<?php echo $curr == "community" ? "active" : ""?>"><a href="/get-involved" >Get Involved</a></li>
-      <li class="<?php echo $curr == "help" ? "active" : ""?>"><a href="/support">Help</a></li>
-      <li class="<?php echo $curr === "php8" ? "active" : "" ?>">
-        <a href="/releases/8.3/index.php">
-          <img src="/images/php8/logo_php8_3.svg" alt="php8.3" height="22" width="60">
-        </a>
-      </li>
-    </ul>
-    <form class="navbar-search" id="topsearch" action="/search.php">
-      <input type="hidden" name="show" value="quickref">
-      <input type="search" name="pattern" class="search-query" placeholder="Search" accesskey="s">
-    </form>
+<script>
+function toggleMenu() {
+  const el = document.getElementById('php-navbar-offcanvas')
+  if (el.classList.toggle('show')) {
+    el.setAttribute('aria-modal', 'true')
+    el.setAttribute('role', "dialog") 
+  } else {
+    el.removeAttribute('aria-modal')
+    el.removeAttribute('role')
+  }
+
+  document.getElementById('php-navbar-backdrop').classList.toggle('show')
+}
+</script>
+
+<nav class="php-navbar php-navbar-fixed-top">
+  <div class="php-navbar-inner">
+    <a href="/" class="brand"><img src="/images/logos/php-logo-white.svg" width="80" alt="php"></a>
+
+    <button class="php-navbar-menu-btn php-navbar-menu-btn-open" onclick="toggleMenu()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Menu</title><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
+    </button>
+    <div id="php-navbar-offcanvas" tabindex="-1" class="php-navbar-offcanvas" aria-label="Menu">
+      <button class="php-navbar-menu-btn php-navbar-menu-btn-close" onclick="toggleMenu()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Close</title><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
+      </button>
+      <ul class="php-navbar-nav">
+        <li class="<?php echo $curr == "downloads" ? "active" : ""?>"><a href="/downloads">Downloads</a></li>
+        <li class="<?php echo $curr == "docs" ? "active" : ""?>"><a href="/docs.php">Documentation</a></li>
+        <li class="<?php echo $curr == "community" ? "active" : ""?>"><a href="/get-involved" >Get Involved</a></li>
+        <li class="<?php echo $curr == "help" ? "active" : ""?>"><a href="/support">Help</a></li>
+        <li class="<?php echo $curr === "php8" ? "active" : "" ?>">
+          <a href="/releases/8.3/index.php">
+            <img src="/images/php8/logo_php8_3.svg" alt="php8.3" height="22" width="60">
+          </a>
+        </li>
+      </ul>
+      <form class="php-navbar-search" id="topsearch" action="/search.php">
+        <input type="hidden" name="show" value="quickref">
+        <input type="search" name="pattern" class="search-query" placeholder="Search" accesskey="s">
+      </form>
+    </div>
+
+    <div id="php-navbar-backdrop" class="php-navbar-backdrop" onclick="toggleMenu()"></div>
   </div>
   <div id="flash-message"></div>
 </nav>

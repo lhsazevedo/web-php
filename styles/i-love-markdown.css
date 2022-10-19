@@ -188,6 +188,6 @@
 }
 
 
-.brand, #mainmenu-toggle-overlay, #mainmenu-toggle, #trick {
+.brand, #mainmenu-toggle-overlay, #mainmenu-toggle, #trick, .php-navbar-icon {
 	display: none;
 }
