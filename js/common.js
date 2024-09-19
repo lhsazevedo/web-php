@@ -557,6 +557,9 @@ $(document).ready(function () {
         const searchModalContainer = document.getElementById("php-search-container");
 
         const openSearchModal = function () {
+            const searchResults = document.getElementById("php-search-results");
+            searchResults.innerHTML = ''
+
             searchModalContainer.style.display = 'block';
             // Force a reflow to make the transition work.
             void searchModalContainer.offsetWidth;
