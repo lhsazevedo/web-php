@@ -1494,17 +1494,6 @@ div.soft-deprecation-notice blockquote.sidebar {
   }
 }
 
-@media (min-width: 992px) {
-  body {
-    margin: 64px 0 0;
-  }
-  /* Add a top-margin to all elements which get referenced by anchor-urls, so
-   * they are not covered by the fixed header */
-  [id] {
-    scroll-margin-top: 4.25rem;
-  }
-}
-
 @media (min-width: 768px) and (max-width: 979px) {
     aside.tips {
         width: 30% !important;

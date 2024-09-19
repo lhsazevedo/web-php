@@ -1,0 +1,170 @@
+/* TODO: This styles are duplicated in the navbar */
+.php-search-modal-close-btn {
+  cursor: pointer;
+  padding: 8px;
+  border: 0;
+  outline: 0;
+  margin-left: 8px;
+  margin-right: -13px; /* 8px padding + 5px svg blank area */
+
+  color: #e8e8e8;
+  background-color: transparent;
+  opacity: .65;
+
+  transition: opacity .25s ease-out;
+}
+
+/* TODO: This styles are duplicated in the navbar */
+.php-search-modal-close-btn svg {
+  width: 24px;
+  display: block;
+  fill: currentColor;
+}
+
+.php-search-modal-close-btn:hover,
+.php-search-modal-close-btn:focus-visible {
+  color: white;
+  opacity: 1;
+}
+
+
+.php-search-container {
+  display: none;
+  position: fixed;
+  justify-content: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1030;
+  background-color: rgba(0, 0, 0, .5);
+  opacity: 1;
+  transition: opacity .15s ease;
+}
+
+.php-search-container:not(.show) {
+  opacity: 0;
+}
+
+.php-search-modal, .php-search-modal * {
+  box-sizing: border-box;
+}
+
+.php-search-modal {
+  background-color: var(--dark-grey-color);
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  line-height: 1rem;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.php-search-modal-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.php-search-modal-form {
+  background-color: rgba(255, 255, 255, 0.1);
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  height: 48px;
+  border-radius: 8px;
+  padding-left: 12px;
+}
+
+.php-search-modal-icon {
+  display: block;
+  width: 24px;
+  fill: var(--background-text-color);
+}
+
+.php-search-modal-input {
+  padding-left: 12px;
+  flex-grow: 1;
+  border: none;
+  font-size: 18px;
+  background-color: transparent;
+  height: 48px;
+  color: white;
+}
+
+.php-search-modal-input:focus {
+  border-width: 1px;
+  outline: none;
+}
+
+.php-search-modal-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.php-search-results {
+  padding: 0 16px;
+  overflow-y: scroll;
+}
+
+.php-search-result {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.php-search-result:hover {
+  background-color: var(--dark-blue-color);
+}
+
+.php-search-result-main {
+  flex-grow: 1;
+}
+
+.php-search-result-name {
+  color: #e6e6e6;
+  margin-bottom: 6px;
+}
+
+.php-search-result:hover .php-search-result-name {
+  color: white;
+}
+
+.php-search-result-desc {
+  font-size: 14px;
+  color: var(--background-text-color);
+}
+
+.php-search-result:hover .php-search-result-desc {
+  color: white;
+  opacity: 0.6;
+}
+
+.php-search-result-type {
+  margin-right: 12px;
+}
+
+.php-search-result-type svg {
+  display: block;
+  width: 24px;
+  fill: hsla(0, 0%, 100%, 0.3);
+}
+
+@media (min-width: 992px) {
+  .php-search-modal {
+    max-width: 40rem;
+    height: calc(100% - 1rem * 2); /* Convert marign to var */
+    margin: 1rem auto; /* Convert marign to var */
+    border-radius: 16px;
+  }
+
+  .php-search-modal-header {
+    padding: 18px 20px;
+  }
+
+  .php-search-results {
+    padding: 0 20px;
+  }
+}

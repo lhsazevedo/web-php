@@ -9,10 +9,8 @@
      * functions or classes.
      *
      * @constructor
-     * @param {String} label The label to show the user.
      */
-    var Backend = function (label) {
-        this.label = label;
+    var Backend = function () {
         this.elements = {};
     };
 
@@ -23,11 +21,13 @@
      * @param {String} name        The item name to use as a label.
      * @param {String} description Explanatory text for item.
      */
-    Backend.prototype.addItem = function (id, name, description) {
+    Backend.prototype.addItem = function (id, name, description, tag, type) {
         this.elements[id] = {
             id: id,
             name: name,
-            description: description
+            description: description,
+            tag: tag,
+            type: type,
         };
     };
 
@@ -65,7 +65,7 @@
      *                         "limit": the maximum number of results
      */
     $.fn.search = function (options) {
-        var element = this;
+        var $modal = this;
 
         options.language = options.language || "en";
         options.limit = options.limit || 30;
@@ -78,6 +78,12 @@
          * @return {Boolean}
          */
         var canCache = function () {
+            // Disable caching in development (localhost, 127.0.0.1 and 0.0.0.0)
+            const hostnames = ['localhost', '127.0.0.1', '0.0.0.0'];
+            if (hostnames.includes(window.location.hostname)) {
+                return false;
+            }
+
             try {
                 return ('localStorage' in window && window['localStorage'] !== null && "JSON" in window && window["JSON"] !== null);
             } catch (e) {
@@ -94,60 +100,46 @@
          */
         var processIndex = function (index) {
             // The search types we want to support.
-            var backends = {
-                "function": new Backend("Functions"),
-                "variable": new Backend("Variables"),
-                "class": new Backend("Classes"),
-                "exception": new Backend("Exceptions"),
-                "extension": new Backend("Extensions"),
-                "general": new Backend("Other Matches")
-            };
+            var backend = new Backend()
 
             $.each(index, function (id, item) {
                 /* If the item has a name, then we should figure out what type
                  * of data this is, and hence which backend this should go
                  * into. */
                 if (item[0]) {
-                    var type = null;
+                    var type = "General";
 
                     switch(item[2]) {
                         case "phpdoc:varentry":
-                            type = "variable";
+                            type = "Variable";
                             break;
 
                         case "refentry":
-                            type = "function";
+                            type = "Function";
                             break;
 
                         case "phpdoc:exceptionref":
-                             type = "exception";
+                             type = "Exception";
                              break;
 
                         case "phpdoc:classref":
-                             type = "class";
+                             type = "Class";
                              break;
 
                         case "set":
                         case "book":
                         case "reference":
-                             type = "extension";
+                             type = "Extension";
                              break;
-
-                        case "section":
-                        case "chapter":
-                        case "appendix":
-                        case "article":
-                        default:
-                             type = "general";
                     }
 
                     if (type) {
-                        backends[type].addItem(id, item[0], item[1]);
+                        backend.addItem(id, item[0], item[1], item[2], type);
                     }
                 }
             });
 
-            return backends;
+            return backend;
         };
 
         /**
@@ -175,13 +167,9 @@
                     // We'll use anything that's less than two weeks old.
                     since.setDate(since.getDate() - 14);
                     if (cache.time > since.getTime()) {
-                        success($.map(cache.data, function (dataset, name) {
-                            // Rehydrate the Backend objects.
-                            var backend = new Backend(dataset.label);
-                            backend.elements = dataset.elements;
-
-                            return backend;
-                        }));
+                        b = new Backend();
+                        b.elements = cache.data.elements
+                        success(b);
                         return;
                     }
                 }
@@ -193,7 +181,7 @@
                 error: failure,
                 success: function (data) {
                     // Transform the data into something useful.
-                    var backends = processIndex(data);
+                    var backend = processIndex(data);
                     // Cache the data if we can.
                     if (canCache()) {
                         /* This may fail in IE 8 due to exceeding the local
@@ -202,7 +190,7 @@
                         try {
                             window.localStorage.setItem(key,
                                 JSON.stringify({
-                                    data: backends,
+                                    data: backend,
                                     time: new Date().getTime()
                                 })
                             );
@@ -210,7 +198,7 @@
                             // Derp.
                         }
                     }
-                    success(backends);
+                    success(backend);
                 },
                 url: "/js/search-index.php?lang=" + language
             });
@@ -219,153 +207,86 @@
         /**
          * Actually enables the typeahead on the DOM element.
          *
-         * @param {Object} backends An array-like object containing backends.
+         * @param {Object} backend An array-like object containing backend.
          */
-        var enableSearchTypeahead = function (backends) {
-            var header = Hogan.compile(
-                '<h3 class="result-heading"><span class="collapsible"></span>{{ label }}' +
-                '<span class="result-count">{{ count }}</span></h3>' +
-                '<div class="tt-suggestions"></div>'
-            );
-            var template = Hogan.compile(
-                '<div>' +
-                    '<h4>{{ name }}</h4>' +
-                    '<span title="{{ description }}" class="description">{{ description }}</span>' +
-                '</div>'
-            );
+        var enableSearchTypeahead = function (backend) {
+            var fuzzyhound = new FuzzySearch({
+                source: backend.toTypeaheadArray(),
+                token_sep: ' \t.,-_', // treat colon as part of token, ignore tabs (from pasted content)
+                score_test_fused: true,
+                keys: [
+                    'name',
+                    'methodName',
+                    'description'
+                ],
+                thresh_include: 5.0,
+                thresh_relative_to_best: 0.7,
+                bonus_match_start: 0.7,
+                bonus_token_order: 1.0,
+                bonus_position_decay: 0.3,
+                token_query_min_length: 1,
+                token_field_min_length: 2,
+                output_map: 'root',
+            });
 
-            // Build the typeahead options array.
-            var typeaheadOptions = $.map(backends, function (backend, name) {
-                var fuzzyhound = new FuzzySearch({
-                    source: backend.toTypeaheadArray(),
-                    token_sep: ' \t.,-_', // treat colon as part of token, ignore tabs (from pasted content)
-                    score_test_fused: true,
-                    keys: [
-                        'name',
-                        'methodName',
-                        'description'
-                    ],
-                    thresh_include: 5.0,
-                    thresh_relative_to_best: 0.7,
-                    bonus_match_start: 0.7,
-                    bonus_token_order: 1.0,
-                    bonus_position_decay: 0.3,
-                    token_query_min_length: 1,
-                    token_field_min_length: 2
+            var $resultsContainer = $modal.find('#php-search-results');
+
+            // Source: https://pictogrammers.com/library/mdi/
+            // We should credit them somewhere :)
+            var bracesIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>';
+            var documentIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>file-document-outline</title><path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" /></svg>';
+
+            $modal.find('#php-search-modal-input').on('input', function () {
+                $resultsContainer.empty();
+
+                var results = fuzzyhound.search(this.value)
+
+                results.forEach(function (result) {
+                    // Boost Language Reference matches.
+                    if (result.item.id.startsWith('language')) {
+                        result.score += 10;
+                    }
                 });
 
-                return {
-                    source: fuzzyhound,
-                    name: name,
-                    limit: options.limit,
-                    display: 'name',
-                    templates: {
-                        header: function () {
-                            return header.render({
-                                label: backend.label,
-                                count: fuzzyhound.results.length
-                            });
-                        },
-                        suggestion: function (result) {
-                            return template.render({
-                                name: result.name,
-                                description: result.description
-                            });
-                        }
+                results.sort(function (a, b) {
+                    return b.score - a.score;
+                });
+
+                $resultsContainer.append(results.slice(0, 20).map(function (result) {
+                    var icon = documentIcon;
+                    var item = result.item;
+
+                    bracesTags = [
+                        'refentry',
+                        'reference',
+
+                        // Some refentry tags use the role attribute as name for the index.
+                        // See phpdotnet\phd\Index::format_refentry()
+                        'phpdoc:classref',
+                        'phpdoc:exceptionref',
+                        'phpdoc:varentry',
+                        'stream_wrapper',
+                        'stream_context_option',
+
+                    ]
+
+                    if (bracesTags.includes(item.tag)) {
+                        icon = bracesIcon;
                     }
-                };
-            });
 
-            // Set up the typeahead and the various listeners we need.
-            var searchTypeahead = element.typeahead(
-                {
-                    minLength: 1,
-                    classNames: {
-                        menu: 'tt-dropdown-menu',
-                        cursor: 'tt-is-under-cursor'
-                    }
-                },
-                typeaheadOptions
-            );
+                    let description = (item.type === "General")
+                        ? item.description
+                        : `${item.type} • ${item.description}`;
 
-            // Delegate click events to result-heading collapsible icons, and trigger the accordion action
-            $('.tt-dropdown-menu').delegate('.result-heading .collapsible', 'click', function () {
-                var el = $(this), suggestions = el.parent().parent().find('.tt-suggestions');
-                suggestions.stop();
-                if(!el.hasClass('closed')) {
-                    suggestions.slideUp();
-                    el.addClass('closed');
-                } else {
-                    suggestions.slideDown();
-                    el.removeClass('closed');
-                }
-
-            });
-
-            // If the user has selected an autocomplete item and hits enter, we should take them straight to the page.
-            searchTypeahead.on("typeahead:select", function (_, item) {
-                window.location = "/manual/" + options.language + "/" + item.id + ".php";
-            });
-
-            // Get new parent after initialization
-            var elementParent = element.parent();
-
-            searchTypeahead.on('typeahead:render', function (evt, renderedSuggestions, fetchedAsync, datasetIndex) {
-                // Fix the missing wrapper from typeahead v0.9.3 for UI parity
-                var set = elementParent.find('.tt-dataset-' + datasetIndex);
-                set.children('.tt-suggestions').first().append(set.children('.tt-suggestion'));
-            });
-
-            var lastPattern;
-            searchTypeahead.on("keyup", (function () {
-                /* typeahead.js doesn't give us a reliable event for the
-                 * dropdown entries having been updated, so we'll hook into the
-                 * input element's keyup instead. The aim here is to put in
-                 * fake entries so that the user has a discoverable way to
-                 * perform different searches based on what he or she has
-                 * entered. */
-
-                // Precompile the templates we need for the fake entries.
-                var searchTemplate = Hogan.compile("<a class='search' href='{{ url }}'>&raquo; Search php.net for {{ pattern }}</a>");
-
-                /* Now we'll return the actual function that should be invoked
-                 * when the user has typed something into the search box after
-                 * typeahead.js has done its thing. */
-                return function () {
-                    // Grab what the user entered.
-                    var pattern = element.val();
-                    if (pattern == lastPattern) {
-                        return;
-                    }
-                    lastPattern = pattern;
-
-                    /* Add a global search option. Note that, as above, the
-                     * link is only displayed if more than 2 characters have
-                     * been entered: this is due to our search functionality
-                     * requiring at least 3 characters in the pattern. */
-                    var dropdown = elementParent.children('.tt-dropdown-menu');
-                    dropdown.children('.search').remove();
-                    if (pattern.length > 2) {
-                        dropdown.append(searchTemplate.render({
-                            pattern: pattern,
-                            url: "/search.php?pattern=" + encodeURIComponent(pattern)
-                        }));
-
-                        /* If the dropdown is hidden (because there are no
-                         * results), show it anyway. */
-                        dropdown.show();
-                    }
-                };
-            })());
-
-            /* typeahead.js adds another input element as part of its DOM
-             * manipulation, which breaks the auto-submit functionality we
-             * previously relied upon for enter keypresses in the input box to
-             * work. Adding a hidden submit button re-enables it. */
-            $("<input type='submit' style='visibility: hidden; position: fixed'>").insertAfter(element);
-
-            // Fix for a styling issue on the created input element.
-            elementParent.children(".tt-hint").addClass("search-query");
+                    return `<a href="/manual/${options.language}/${item.id}.php" class="php-search-result">
+                            <div class="php-search-result-type">${icon}</div>
+                                <div class="php-search-result-main">
+                                    <div class="php-search-result-name">${item.name}</div>
+                                    <div class="php-search-result-desc">${description}</div>
+                                </div>
+                            </a>`
+                }))
+            })
         };
 
         // Look for the user's language, then fall back to English.

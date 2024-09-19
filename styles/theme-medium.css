@@ -182,15 +182,16 @@ div.warning a:focus {
 }
 /* }}} */
 
-.php-navbar-search .search-query {
+.php-navbar-search {
   background-color: #404F82;
   color: #B4BFF3;
   border: 1px solid #6A78BE;
   border-radius: 8px;
   padding: 8px 12px;
+  text-align: left;
 }
 
-.php-navbar-search .search-query:focus {
+.php-navbar-search:focus {
   border-width: 1px;
   border-color: #94A3ED;
   outline: none;
@@ -200,22 +201,11 @@ div.warning a:focus {
   color: #7c8bd6;
 }
 
-.php-navbar-search .search-query::placeholder {
-  color: #B4BFF3;
-}
-
 /* }}} */
 
 /* {{{ 2023 Navbar */
 
 .php-navbar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  /* Ensure render above page contents */
-  z-index: 1000;
-
   background-color: var(--dark-blue-color);
   box-shadow: 0 2px 4px 0px rgba(0,0,0,.2);
 }
@@ -274,8 +264,12 @@ div.warning a:focus {
 .php-navbar-search {
   flex-grow: 1;
   max-width: 300px;
+}
 
-  margin-left: auto;
+.php-navbar-right {
+  flex-grow: 1;
+  display: flex;
+  justify-content: end;
 }
 
 .php-navbar-backdrop {
@@ -293,12 +287,12 @@ div.warning a:focus {
   z-index: 1010;
 }
 
-.php-navbar .search-query {
+/* .php-navbar .search-query {
   width: 100%;
   box-sizing: border-box;
-}
+} */
 
-.php-navbar-menu-btn {
+.php-navbar-menu-btn, .php-navbar-search-btn-mobile {
   cursor: pointer;
   padding: 8px;
   border: 0;
@@ -312,7 +306,9 @@ div.warning a:focus {
 }
 
 .php-navbar-menu-btn:hover,
-.php-navbar-menu-btn:focus-visible {
+.php-navbar-menu-btn:focus-visible,
+.php-navbar-search-btn-mobile:hover,
+.php-navbar-search-btn-mobile:focus-visible {
   color: white;
   opacity: 1;
 }
@@ -323,8 +319,13 @@ div.warning a:focus {
   fill: currentColor;
 }
 
+.php-navbar-search-btn-mobile svg {
+  width: 24px;
+  display: block;
+  stroke: currentColor;
+}
+
 .php-navbar-menu-btn-open {
-  margin-left: auto;
   margin-right: -12px;
 }
 
@@ -364,10 +365,10 @@ div.warning a:focus {
 
     flex-direction: column;
 
-    width: 360px;
+    width: 240px;
     max-width: 100%;
     padding: 24px;
-    padding-top: 80px;
+    /* padding-top: 80px; */
 
     background-color: var(--dark-blue-color);
     box-shadow: 0 16px 48px rgba(0,0,0,.175);
@@ -389,6 +390,7 @@ div.warning a:focus {
   }
 
   .php-navbar-search {
+    display: none;
     flex-grow: 0;
     margin: 0;
   }
@@ -399,12 +401,12 @@ div.warning a:focus {
 }
 
 @media (min-width: 992px) {
-  .php-navbar-menu-btn {
+  .php-navbar-menu-btn, .php-navbar-search-btn-mobile {
     display: none;
   }
 
-  .php-navbar-menu-btn {
-    display: none;
+  .php-navbar-search {
+    display: block;
   }
 }
 
