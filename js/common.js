@@ -552,64 +552,59 @@ $(document).ready(function () {
     });
     /*}}}*/
 
-    // Search box autocomplete (for browsers that aren't IE <= 8, anyway).
-    if (typeof window.brokenIE === "undefined") {
-        const searchModalContainer = document.getElementById("php-search-container");
+    const searchModalContainer = document.getElementById("php-search-container");
 
-        const openSearchModal = function () {
-            const searchResults = document.getElementById("php-search-results");
-            searchResults.innerHTML = ''
+    const openSearchModal = function () {
+        const searchResults = document.getElementById("php-search-results");
+        searchResults.innerHTML = '';
 
-            searchModalContainer.style.display = 'block';
-            // Force a reflow to make the transition work.
-            void searchModalContainer.offsetWidth;
-            searchModalContainer.classList.add('show');
-            document.body.style.overflow = 'hidden';
+        searchModalContainer.style.display = 'block';
+        // Force a reflow to make the transition work.
+        void searchModalContainer.offsetWidth;
+        searchModalContainer.classList.add('show');
+        document.body.style.overflow = 'hidden';
 
-            const searchInput = document.getElementById("php-search-modal-input");
-            searchInput.focus();
-            searchInput.value = '';
-        }
+        const searchInput = document.getElementById("php-search-modal-input");
+        searchInput.focus();
+        searchInput.value = '';
+    };
 
-        // Open the search modal when the search button is clicked
-        document.querySelectorAll(".php-navbar-search, .php-navbar-search-btn-mobile")
-            .forEach(button => button.addEventListener('click', openSearchModal));
+    // Open the search modal when the search button is clicked
+    document.querySelectorAll(".php-navbar-search, .php-navbar-search-btn-mobile")
+        .forEach(button => button.addEventListener('click', openSearchModal));
 
-        const hideSearchModal = function () {
-            searchModalContainer.classList.remove('show');
-            document.body.style.overflow = 'auto';
-            searchModalContainer.addEventListener(
-                'transitionend',
-                () => { searchModalContainer.style.display = 'none' },
-                { once: true}
-            );
-        }
+    const hideSearchModal = function () {
+        searchModalContainer.classList.remove('show');
+        document.body.style.overflow = 'auto';
+        searchModalContainer.addEventListener(
+            'transitionend',
+            () => { searchModalContainer.style.display = 'none'; },
+            { once: true }
+        );
+    };
 
-        // Close the search modal when the close button is clicked
-        document.querySelector(".php-search-modal-close-btn").addEventListener('click', hideSearchModal);
+    // Close the search modal when the close button is clicked
+    document.querySelector(".php-search-modal-close-btn").addEventListener('click', hideSearchModal);
 
-        // Close the search modal when the escape key is pressed
-        document.addEventListener('keydown', function (event) {
-            if (event.key !== 'Escape') {
-                return;
-            }
+    // Close the search modal when the escape key is pressed
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
             hideSearchModal();
-        });
+        }
+    });
 
-        // Close the search modal when the user clicks outside of it
-        searchModalContainer.addEventListener('click', function (event) {
-            if (event.target !== searchModalContainer) {
-                return;
-            }
+    // Close the search modal when the user clicks outside of it
+    searchModalContainer.addEventListener('click', function (event) {
+        if (event.target === searchModalContainer) {
             hideSearchModal();
-        })
+        }
+    });
 
-        // TODO: Remove JQuery dependency
-        jQuery("#php-search-modal").search({
-            language: getLanguage(),
-            limit: 30
-        });
-    }
+    // Initialize the search functionality
+    PHPSearch.init({
+        language: getLanguage(),
+        limit: 30
+    });
 
     /* {{{ Negative user notes fade-out */
     var usernotes = document.getElementById('usernotes');
