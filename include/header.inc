@@ -4,6 +4,7 @@ $css_files = [
     '/fonts/Font-Awesome/css/fontello.css',
     '/styles/theme-base.css',
     '/styles/theme-medium.css',
+    '/styles/php-search.css',
 ];
 
 if (isset($config['css'])) {
@@ -113,9 +114,6 @@ function toggleMenu() {
   <div class="php-navbar-inner">
     <a href="/" class="brand"><img src="/images/logos/php-logo-white.svg" width="80" alt="php"></a>
 
-    <button class="php-navbar-menu-btn php-navbar-menu-btn-open" onclick="toggleMenu()">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Menu</title><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
-    </button>
     <div id="php-navbar-offcanvas" tabindex="-1" class="php-navbar-offcanvas" aria-label="Menu">
       <button class="php-navbar-menu-btn php-navbar-menu-btn-close" onclick="toggleMenu()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Close</title><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
@@ -131,14 +129,24 @@ function toggleMenu() {
           </a>
         </li>
       </ul>
-      <form class="php-navbar-search" id="topsearch" action="/search.php">
-        <input type="hidden" name="show" value="quickref">
-        <input type="search" name="pattern" class="search-query" placeholder="Search" accesskey="s">
-      </form>
+    </div>
+
+    <div class="php-navbar-right">
+        <button class="php-navbar-search">Search</button>
+
+        <button class="php-navbar-search-btn-mobile">
+          <!-- https://feathericons.com -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+        <button class="php-navbar-menu-btn php-navbar-menu-btn-open" onclick="toggleMenu()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Menu</title><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
+        </button>
+      </div>
     </div>
 
     <div id="php-navbar-backdrop" class="php-navbar-backdrop" onclick="toggleMenu()"></div>
   </div>
+  
   <div id="flash-message"></div>
 </nav>
 <?php if (!empty($config["headsup"])): ?>

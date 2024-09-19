@@ -108,5 +108,24 @@ if (!empty($_SERVER['BASE_PAGE'])
 
 <a id="toTop" href="javascript:;"><span id="toTopHover"></span><img width="40" height="40" alt="To Top" src="/images/to-top@2x.png"></a>
 
+<div id="php-search-container" class="php-search-container">
+  <div id="php-search-modal" class="php-search-modal">
+    <div class="php-search-modal-header">
+      <div class="php-search-modal-form">
+        <div class="php-search-modal-icon">
+          <!-- https://feathericons.com -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </div>
+        <input type="text" id="php-search-modal-input" class="php-search-modal-input" placeholder="Search PHP docs">
+      </div>
+
+      <button class="php-search-modal-close-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Close</title><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
+      </button>
+    </div>
+    <div id="php-search-results" class="php-search-results"></div>
+  </div>
+</div>
+
 </body>
 </html>
