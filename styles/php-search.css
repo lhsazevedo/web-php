@@ -121,11 +121,15 @@
 
 .php-search-result-main {
   flex-grow: 1;
+  min-width: 0; /* Allow text truncation */
 }
 
 .php-search-result-name {
   color: #e6e6e6;
   margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .php-search-result:hover .php-search-result-name {
@@ -135,6 +139,9 @@
 .php-search-result-desc {
   font-size: 14px;
   color: var(--background-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .php-search-result:hover .php-search-result-desc {
