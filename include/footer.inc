@@ -124,6 +124,16 @@ if (!empty($_SERVER['BASE_PAGE'])
       </button>
     </div>
     <div id="php-search-results" class="php-search-results"></div>
+    <div class="php-search-helper-text">
+      <div>
+        <strong>↑ ↓</strong> to navigate •
+        <strong>Enter</strong> to select •
+        <strong>Esc</strong> to close
+      </div>
+      <div>
+        Press <strong>Enter</strong> without selection to search PHP docs on Google
+      </div>
+    </div>
   </div>
 </div>
 
