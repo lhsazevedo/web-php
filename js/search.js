@@ -227,7 +227,7 @@ const PHPSearch = (() => {
      */
     const init = async ({ language = "en", limit = 30 }) => {
         const resultsContainer = document.getElementById("php-search-results");
-        const searchInput = document.getElementById("php-search-modal-input");
+        const searchInput = document.getElementById("php-search-input");
 
         const searchItems = await loadLanguageIndexWithFallback(language);
         if (!searchItems) {

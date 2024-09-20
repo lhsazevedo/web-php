@@ -564,7 +564,7 @@ $(document).ready(function () {
         searchModalContainer.classList.add('show');
         document.body.style.overflow = 'hidden';
 
-        const searchInput = document.getElementById("php-search-modal-input");
+        const searchInput = document.getElementById("php-search-input");
         searchInput.focus();
         searchInput.value = '';
     };
@@ -584,7 +584,7 @@ $(document).ready(function () {
     };
 
     // Close the search modal when the close button is clicked
-    document.querySelector(".php-search-modal-close-btn").addEventListener('click', hideSearchModal);
+    document.querySelector(".php-search-close-btn").addEventListener('click', hideSearchModal);
 
     // Close the search modal when the escape key is pressed
     document.addEventListener('keydown', function (event) {
