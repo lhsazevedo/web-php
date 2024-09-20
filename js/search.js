@@ -2,15 +2,17 @@ const PHPSearch = (() => {
     const DEBOUNCE_DELAY = 200;
     const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
     const CACHE_DAYS = 14;
+    const BRACES_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>';
+    const DOCUMENT_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>file-document-outline</title><path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" /></svg>';
 
     // SVG icons
     const parser = new DOMParser();
     const bracesIcon = parser.parseFromString(
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>',
+        BRACES_ICON,
         "image/svg+xml",
     ).documentElement;
     const documentIcon = parser.parseFromString(
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>file-document-outline</title><path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" /></svg>',
+        DOCUMENT_ICON,
         "image/svg+xml",
     ).documentElement;
 
@@ -172,28 +174,62 @@ const PHPSearch = (() => {
     const render = (results, language, container) => {
         container.innerHTML = "";
         results.forEach(({ item }) => {
-            const isGeneral = item.type === "General";
-            const icon = (isGeneral ? documentIcon : bracesIcon).cloneNode(true);
-            const link = encodeURIComponent(
-                `/manual/${language}/${item.id}.php`,
-            );
+            const icon = ["General", "Extension"].includes(item.type)
+                ? documentIcon
+                : bracesIcon;
+            const link = `/manual/${encodeURIComponent(language)}/${encodeURIComponent(item.id)}.php`;
 
-            container.appendChild(
-                el("a", { href: link, className: "php-search-result" }, [
+            const resultElement = el(
+                "a",
+                {
+                    href: link,
+                    className: "php-search-result",
+                    role: "option",
+                    "aria-selected": "false",
+                },
+                [
                     el("div", { className: "php-search-result-type" }, [
-                        icon,
+                        icon.cloneNode(true),
                     ]),
                     el("div", { className: "php-search-result-main" }, [
                         el("div", { className: "php-search-result-name" }, [
                             item.name,
                         ]),
                         el("div", { className: "php-search-result-desc" }, [
-                            !isGeneral && `${item.type} • `,
+                            item.type !== "General" && `${item.type} • `,
                             item.description,
                         ]),
                     ]),
-                ]),
+                ],
             );
+
+            container.appendChild(resultElement);
+        });
+    };
+
+    /**
+     * Update the selected result in the results container.
+     *
+     * @param {HTMLElement} resultsContainer The results container.
+     * @param {Number} selectedIndex The index of the selected result.
+     */
+    const updateSelectedResult = (resultsContainer, selectedIndex) => {
+        const results =
+            resultsContainer.querySelectorAll(".php-search-result");
+        results.forEach((result, index) => {
+            result.setAttribute(
+                "aria-selected",
+                index === selectedIndex ? "true" : "false",
+            );
+            if (index !== selectedIndex) {
+                result.classList.remove("selected");
+                return;
+            }
+            result.classList.add("selected");
+            result.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+            });
         });
     };
 
@@ -215,7 +251,7 @@ const PHPSearch = (() => {
                 }
                 return result;
             })
-            .sort((a, b) => b.score - a.score)
+            .sort((a, b) => b.score - a.score);
     };
 
     /**
@@ -251,13 +287,54 @@ const PHPSearch = (() => {
             output_limit: limit,
         });
 
+        let selectedIndex = -1;
+
+        const handleKeyDown = (event) => {
+            const results =
+                resultsContainer.querySelectorAll(".php-search-result");
+
+            switch (event.key) {
+                case "ArrowDown":
+                    event.preventDefault();
+                    selectedIndex = Math.min(
+                        selectedIndex + 1,
+                        results.length - 1,
+                    );
+                    updateSelectedResult(resultsContainer, selectedIndex);
+                    break;
+                case "ArrowUp":
+                    event.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateSelectedResult(resultsContainer, selectedIndex);
+                    break;
+                case "Enter":
+                    if (selectedIndex !== -1) {
+                        event.preventDefault();
+                        results[selectedIndex].click();
+                    } else {
+                        window.location.href
+                            = `/search.php?lang=${language}&q=` +
+                            encodeURIComponent(searchInput.value);
+                    }
+                    break;
+                case "Escape":
+                    selectedIndex = -1;
+                    break;
+            }
+        };
+
         searchInput.addEventListener(
             "input",
             debounce(() => {
                 const result = search(searchInput.value, fuzzyhound);
                 render(result, language, resultsContainer);
+                selectedIndex = -1;
+                resultsContainer.setAttribute("role", "listbox");
+                resultsContainer.setAttribute("aria-label", "Search results");
             }, DEBOUNCE_DELAY),
         );
+
+        searchInput.addEventListener("keydown", handleKeyDown);
     };
 
     return { init };
