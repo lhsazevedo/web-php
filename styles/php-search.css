@@ -63,7 +63,7 @@
   border: none;
   font-size: 18px;
   background-color: transparent;
-  height: 48px;
+  height: 44px;
   min-width: 0;
   color: white;
 }
@@ -85,7 +85,7 @@
   border: 0;
   outline: 0;
   margin-left: 8px;
-  /* margin-right: -12px; 8px padding + 5px svg blank area */
+  margin-right: -4px; /* Compensate for button padding */
 
   color: #e8e8e8;
   background-color: transparent;
@@ -171,13 +171,14 @@
 }
 
 .php-search-helper-text {
+  display: none;
   padding: 10px 16px;
   font-size: 14px;
 }
 
 @media (min-width: 992px) {
   .php-search-modal {
-    max-width: 40rem;
+    max-width: 560px;
     height: calc(100% - 1rem * 2); /* Convert marign to var */
     margin: 1rem auto; /* Convert marign to var */
     border-radius: 16px;
@@ -187,11 +188,20 @@
     padding: 18px 20px;
   }
 
+  .php-search-input {
+    height: 52px;
+  }
+
+  .php-search-close-btn {
+    margin-right: -8px; /* Compensate for button padding */
+  }
+
   .php-search-results {
     padding: 0 20px;
   }
 
   .php-search-helper-text {
+    display: block;
     padding: 18px 20px;
   }
 }
