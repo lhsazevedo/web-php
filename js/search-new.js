@@ -1,4 +1,0 @@
-
-$modal = $('#php-search-modal');
-
-

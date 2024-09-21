@@ -136,7 +136,8 @@ const PHPSearch = (() => {
     };
 
     /**
-     * Helper function to safely create DOM elements with attributes and children.
+     * Utility function to safely create DOM elements with attributes and
+     * children.
      *
      * @param {String} tag The tag name of the element.
      * @param {Object} attrs The attributes to set on the element.
@@ -171,7 +172,7 @@ const PHPSearch = (() => {
      * @param {Array} results The search results.
      * @param {HTMLElement} container The container to render the results in.
      */
-    const render = (results, language, container) => {
+    const renderResults = (results, language, container) => {
         container.innerHTML = "";
         results.forEach(({ item }) => {
             const icon = ["General", "Extension"].includes(item.type)
@@ -210,12 +211,11 @@ const PHPSearch = (() => {
     /**
      * Update the selected result in the results container.
      *
-     * @param {HTMLElement} resultsContainer The results container.
-     * @param {Number} selectedIndex The index of the selected result.
+     * @param {HTMLElement} resultsContainer
+     * @param {Number} selectedIndex
      */
     const updateSelectedResult = (resultsContainer, selectedIndex) => {
-        const results =
-            resultsContainer.querySelectorAll(".php-search-result");
+        const results = resultsContainer.querySelectorAll(".php-search-result");
         results.forEach((result, index) => {
             result.setAttribute(
                 "aria-selected",
@@ -235,7 +235,6 @@ const PHPSearch = (() => {
 
     /**
      * Perform a search with the given query and FuzzySearch instance.
-     * Boosts Language Reference matches.
      *
      * @param {String} query The search query.
      * @param {FuzzySearch} fuzzyhound The FuzzySearch instance.
@@ -284,12 +283,11 @@ const PHPSearch = (() => {
             token_query_min_length: 1,
             token_field_min_length: 2,
             output_map: "root",
-            output_limit: limit,
         });
 
         let selectedIndex = -1;
 
-        const handleKeyDown = (event) => {
+        const handleKeyDown = function (event) {
             const results =
                 resultsContainer.querySelectorAll(".php-search-result");
 
@@ -312,8 +310,8 @@ const PHPSearch = (() => {
                         event.preventDefault();
                         results[selectedIndex].click();
                     } else {
-                        window.location.href
-                            = `/search.php?lang=${language}&q=` +
+                        window.location.href =
+                            `/search.php?lang=${language}&q=` +
                             encodeURIComponent(searchInput.value);
                     }
                     break;
@@ -327,7 +325,7 @@ const PHPSearch = (() => {
             "input",
             debounce(() => {
                 const result = search(searchInput.value, fuzzyhound);
-                render(result, language, resultsContainer);
+                renderResults(result, language, resultsContainer);
                 selectedIndex = -1;
                 resultsContainer.setAttribute("role", "listbox");
                 resultsContainer.setAttribute("aria-label", "Search results");
