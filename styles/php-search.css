@@ -160,11 +160,11 @@
   opacity: 0.6;
 }
 
-.php-search-result-type {
+.php-search-result-icon {
   margin-right: 12px;
 }
 
-.php-search-result-type svg {
+.php-search-result-icon svg {
   display: block;
   width: 24px;
   fill: hsla(0, 0%, 100%, 0.3);

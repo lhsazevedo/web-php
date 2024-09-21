@@ -189,7 +189,7 @@ const PHPSearch = (() => {
                     "aria-selected": "false",
                 },
                 [
-                    el("div", { className: "php-search-result-type" }, [
+                    el("div", { className: "php-search-result-icon" }, [
                         icon.cloneNode(true),
                     ]),
                     el("div", { className: "php-search-result-main" }, [
