@@ -30,6 +30,11 @@
   flex-direction: column;
 }
 
+.php-search-dialog *:focus-visible {
+  outline: 2px solid var(--light-magenta-color);
+  outline-offset: 2px;
+}
+
 .php-search-header {
   display: flex;
   padding: 10px 16px;
@@ -98,7 +103,7 @@
 }
 
 .php-search-close-btn:hover,
-.php-search-close-btn:focus-visible {
+.php-search-close-btn:focus {
   opacity: 1;
   color: white;
 }
