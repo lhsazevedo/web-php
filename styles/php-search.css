@@ -1,14 +1,14 @@
 .php-search-container {
-  display: none;
-  position: fixed;
-  justify-content: center;
-  top: 0;
-  left: 0;
-  right: 0;
   bottom: 0;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
   z-index: 1030;
-  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
   opacity: 1;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
   transition: opacity 0.2s ease-out;
 }
 
@@ -16,35 +16,34 @@
   opacity: 0;
 }
 
-.php-search-modal,
-.php-search-modal * {
+.php-search-dialog,
+.php-search-dialog * {
   box-sizing: border-box;
 }
 
-.php-search-modal {
-  background-color: var(--dark-grey-color);
-  width: 100%;
+.php-search-dialog {
+  display: flex;
   height: 100%;
   margin: 0;
-
-  display: flex;
+  width: 100%;
+  background-color: var(--dark-grey-color);
   flex-direction: column;
 }
 
 .php-search-header {
   display: flex;
-  align-items: center;
   padding: 10px 16px;
+  align-items: center;
 }
 
 .php-search-form {
-  background-color: rgba(255, 255, 255, 0.1);
-  flex-grow: 1;
   display: flex;
-  align-items: center;
-  border-radius: 8px;
-  padding-left: 12px;
   min-width: 0;
+  padding-left: 12px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  align-items: center;
+  flex-grow: 1;
 }
 
 .php-search-input-icon {
@@ -58,14 +57,14 @@
 }
 
 .php-search-input {
-  padding-left: 12px;
-  flex-grow: 1;
-  border: none;
-  font-size: 18px;
-  background-color: transparent;
   height: 44px;
   min-width: 0;
+  padding-left: 12px;
+  border: none;
+  background-color: transparent;
   color: white;
+  font-size: 18px;
+  flex-grow: 1;
 }
 
 .php-search-input:focus {
@@ -80,46 +79,44 @@
 /* TODO: The icon button styles were copied from the navbar. */
 /* We should refactor this into a shared component when possible. */
 .php-search-close-btn {
-  cursor: pointer;
-  padding: 8px;
-  border: 0;
-  outline: 0;
+  opacity: 0.65;
   margin-left: 8px;
   margin-right: -4px; /* Compensate for button padding */
-
-  color: #e8e8e8;
+  padding: 8px;
+  border: 0;
   background-color: transparent;
-  opacity: 0.65;
-
+  color: #e8e8e8;
   transition: opacity 0.25s ease-out;
+  cursor: pointer;
+  outline: 0;
 }
 
 .php-search-close-btn svg {
-  width: 24px;
   display: block;
+  width: 24px;
   fill: currentColor;
 }
 
 .php-search-close-btn:hover,
 .php-search-close-btn:focus-visible {
-  color: white;
   opacity: 1;
+  color: white;
 }
 
 .php-search-results {
-  padding: 0 16px;
   overflow-y: scroll;
   height: 100%;
+  padding: 0 16px;
 }
 
 .php-search-result {
   display: flex;
-  align-items: center;
   padding: 10px;
   padding-left: 14px;
   border: none;
   border-radius: 0.5rem;
   line-height: 1.2;
+  align-items: center;
 }
 
 .php-search-result:hover {
@@ -131,15 +128,15 @@
 }
 
 .php-search-result-main {
-  flex-grow: 1;
   min-width: 0; /* Allow text truncation */
+  flex-grow: 1;
 }
 
 .php-search-result-name {
-  color: #e6e6e6;
-  margin-bottom: 6px;
-  white-space: nowrap;
   overflow: hidden;
+  margin-bottom: 6px;
+  color: #e6e6e6;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 
@@ -148,16 +145,16 @@
 }
 
 .php-search-result-desc {
-  font-size: 14px;
-  color: var(--background-text-color);
-  white-space: nowrap;
   overflow: hidden;
+  color: var(--background-text-color);
+  font-size: 14px;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .php-search-result:hover .php-search-result-desc {
-  color: white;
   opacity: 0.6;
+  color: white;
 }
 
 .php-search-result-icon {
@@ -177,10 +174,10 @@
 }
 
 @media (min-width: 992px) {
-  .php-search-modal {
+  .php-search-dialog {
     max-width: 560px;
-    height: calc(100% - 1rem * 2); /* Convert marign to var */
-    margin: 1rem auto; /* Convert marign to var */
+    height: calc(100% - 1rem * 2);
+    margin: 1rem auto;
     border-radius: 16px;
   }
 

@@ -109,7 +109,7 @@ if (!empty($_SERVER['BASE_PAGE'])
 <a id="toTop" href="javascript:;"><span id="toTopHover"></span><img width="40" height="40" alt="To Top" src="/images/to-top@2x.png"></a>
 
 <div id="php-search-container" class="php-search-container">
-  <div id="php-search-modal" class="php-search-modal">
+  <div role="dialog" aria-label="Search dialog" id="php-search-dialog" class="php-search-dialog">
     <div class="php-search-header">
       <div class="php-search-form">
         <div class="php-search-input-icon">
@@ -119,7 +119,7 @@ if (!empty($_SERVER['BASE_PAGE'])
         <input type="text" id="php-search-input" class="php-search-input" placeholder="Search PHP docs">
       </div>
 
-      <button class="php-search-close-btn">
+      <button aria-label="Close" class="php-search-close-btn">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Close</title><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
       </button>
     </div>

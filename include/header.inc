@@ -5,6 +5,7 @@ $css_files = [
     '/styles/theme-base.css',
     '/styles/theme-medium.css',
     '/styles/php-search.css',
+    '/styles/php-navbar.css',
 ];
 
 if (isset($config['css'])) {
@@ -100,7 +101,7 @@ function toggleMenu() {
   const el = document.getElementById('php-navbar-offcanvas')
   if (el.classList.toggle('show')) {
     el.setAttribute('aria-modal', 'true')
-    el.setAttribute('role', "dialog") 
+    el.setAttribute('role', "dialog")
   } else {
     el.removeAttribute('aria-modal')
     el.removeAttribute('role')
@@ -134,11 +135,11 @@ function toggleMenu() {
     <div class="php-navbar-right">
         <button class="php-navbar-search">Search</button>
 
-        <button class="php-navbar-search-btn-mobile">
+        <button aria-label="Search" class="php-navbar-search-btn-mobile">
           <!-- https://feathericons.com -->
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
-        <button class="php-navbar-menu-btn php-navbar-menu-btn-open" onclick="toggleMenu()">
+        <button aria-label="Menu" class="php-navbar-menu-btn php-navbar-menu-btn-open" onclick="toggleMenu()">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>Menu</title><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
         </button>
       </div>
@@ -146,7 +147,7 @@ function toggleMenu() {
 
     <div id="php-navbar-backdrop" class="php-navbar-backdrop" onclick="toggleMenu()"></div>
   </div>
-  
+
   <div id="flash-message"></div>
 </nav>
 <?php if (!empty($config["headsup"])): ?>

@@ -147,21 +147,25 @@ const PHPSearch = (() => {
     const el = (tag, attrs = {}, children = []) => {
         const element = document.createElement(tag);
 
-        Object.entries(attrs).forEach(([key, value]) => {
-            if (key === "className") {
-                element.className = value;
-            } else {
-                element.setAttribute(key, value);
+        for (const attr in attrs) {
+            if (attr === "className") {
+                element.className = attrs[attr];
+                continue;
             }
-        });
+            element.setAttribute(attr, attrs[attr]);
+        }
 
-        children.forEach((child) => {
+        for (const child of children) {
             if (typeof child === "string") {
                 element.appendChild(document.createTextNode(child));
-            } else if (child instanceof Node) {
-                element.appendChild(child);
+                continue;
             }
-        });
+            if (child instanceof Node) {
+                element.appendChild(child);
+                continue;
+            }
+            throw new Error("Unsupported child type");
+        }
 
         return element;
     };
@@ -174,7 +178,7 @@ const PHPSearch = (() => {
      */
     const renderResults = (results, language, container) => {
         container.innerHTML = "";
-        results.forEach(({ item }) => {
+        results.forEach(({ item }, i) => {
             const icon = ["General", "Extension"].includes(item.type)
                 ? documentIcon
                 : bracesIcon;
@@ -186,6 +190,8 @@ const PHPSearch = (() => {
                     href: link,
                     className: "php-search-result",
                     role: "option",
+                    "aria-labelledby": `php-search-result-name-${i}`,
+                    "aria-describedby": `php-search-result-desc-${i}`,
                     "aria-selected": "false",
                 },
                 [
@@ -193,13 +199,25 @@ const PHPSearch = (() => {
                         icon.cloneNode(true),
                     ]),
                     el("div", { className: "php-search-result-main" }, [
-                        el("div", { className: "php-search-result-name" }, [
-                            item.name,
-                        ]),
-                        el("div", { className: "php-search-result-desc" }, [
-                            item.type !== "General" && `${item.type} • `,
-                            item.description,
-                        ]),
+                        el(
+                            "div",
+                            {
+                                id: `php-search-result-name-${i}`,
+                                className: "php-search-result-name",
+                            },
+                            [item.name],
+                        ),
+                        el(
+                            "div",
+                            {
+                                id: `php-search-result-desc-${i}`,
+                                className: "php-search-result-desc",
+                            },
+                            [
+                                item.type !== "General" && `${item.type} • `,
+                                item.description,
+                            ],
+                        ),
                     ]),
                 ],
             );
@@ -287,7 +305,7 @@ const PHPSearch = (() => {
 
         let selectedIndex = -1;
 
-        const handleKeyDown = function (event) {
+        const handleKeyDown = (event) => {
             const results =
                 resultsContainer.querySelectorAll(".php-search-result");
 
@@ -310,9 +328,7 @@ const PHPSearch = (() => {
                         event.preventDefault();
                         results[selectedIndex].click();
                     } else {
-                        window.location.href =
-                            `/search.php?lang=${language}&q=` +
-                            encodeURIComponent(searchInput.value);
+                        window.location.href = `/search.php?lang=${language}&q=${encodeURIComponent(searchInput.value)}`;
                     }
                     break;
                 case "Escape":
@@ -325,7 +341,11 @@ const PHPSearch = (() => {
             "input",
             debounce(() => {
                 const result = search(searchInput.value, fuzzyhound);
-                renderResults(result, language, resultsContainer);
+                renderResults(
+                    result.slice(0, limit),
+                    language,
+                    resultsContainer,
+                );
                 selectedIndex = -1;
                 resultsContainer.setAttribute("role", "listbox");
                 resultsContainer.setAttribute("aria-label", "Search results");
