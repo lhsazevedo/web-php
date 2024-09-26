@@ -131,7 +131,7 @@ if (!empty($_SERVER['BASE_PAGE'])
         <strong>Esc</strong> to close
       </div>
       <div>
-        Press <strong>Enter</strong> without selection to search PHP docs on Google
+        Press <strong>Enter</strong> without selection to search using Google
       </div>
     </div>
   </div>
