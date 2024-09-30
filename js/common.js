@@ -553,12 +553,15 @@ $(document).ready(function () {
     /*}}}*/
 
     const searchModalContainer = document.getElementById("php-search-container");
+    const searchModal = document.getElementById("php-search-dialog");
 
     const openSearchModal = function () {
         const searchResults = document.getElementById("php-search-results");
         searchResults.innerHTML = '';
 
         searchModalContainer.style.display = 'block';
+        searchModalContainer.setAttribute('aria-modal', 'true');
+        searchModalContainer.setAttribute('role', 'dialog');
         // Force a reflow to make the transition work.
         void searchModalContainer.offsetWidth;
         searchModalContainer.classList.add('show');
@@ -575,6 +578,8 @@ $(document).ready(function () {
 
     const hideSearchModal = function () {
         searchModalContainer.classList.remove('show');
+        searchModalContainer.removeAttribute('aria-modal');
+        searchModalContainer.removeAttribute('role');
         document.body.style.overflow = 'auto';
         searchModalContainer.addEventListener(
             'transitionend',
@@ -597,6 +602,26 @@ $(document).ready(function () {
     searchModalContainer.addEventListener('click', function (event) {
         if (event.target === searchModalContainer) {
             hideSearchModal();
+        }
+    });
+
+    const searchInput = document.getElementById("php-search-input");
+    document.addEventListener('keydown', function (event) {
+        if (event.key != 'Tab') {
+            return;
+        }
+
+        const selectable = searchModal.querySelectorAll('input, button, a')
+        const lastElement = selectable[selectable.length - 1];
+
+        if (event.shiftKey) {
+            if (document.activeElement === searchInput) {
+                event.preventDefault();
+                lastElement.focus();
+            }
+        } else if (document.activeElement === lastElement) {
+            event.preventDefault();
+            searchInput.focus();
         }
     });
 
