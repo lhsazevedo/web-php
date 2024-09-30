@@ -161,15 +161,15 @@ const PHPSearch = (() => {
     return { init, search };
 })();
 
-const PHPSearchUI = (() => {
+const PHPSearchUI = ({language, limit = 30}) => {
     const DEBOUNCE_DELAY = 200;
     const BRACES_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>';
     const DOCUMENT_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>file-document-outline</title><path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" /></svg>';
 
-    let searchModalContainer;
-    let searchModal;
-    let resultsContainer;
-    let searchInput;
+    const searchModalContainer = document.getElementById("php-search-container");
+    const searchModal = document.getElementById("php-search-dialog");
+    const resultsContainer = document.getElementById("php-search-results");
+    const searchInput = document.getElementById("php-search-input");
 
     // SVG icons
     const parser = new DOMParser();
@@ -433,20 +433,9 @@ const PHPSearchUI = (() => {
         searchInput.addEventListener("keydown", handleKeyDown);
     }
 
-    const init = (language, limit = 30) => {
-        searchModalContainer = document.getElementById("php-search-container");
-        searchModal = document.getElementById("php-search-dialog");
-        resultsContainer = document.getElementById("php-search-results");
-        searchInput = document.getElementById("php-search-input");
-
-        initModalDialog(language, limit);
-
-        // Initialize the search functionality
-        PHPSearch.init({
-            language,
-            limit
-        });
-    };
-
-    return { init };
-})();
+    initModalDialog(language, limit);
+    PHPSearch.init({
+        language,
+        limit
+    });
+};

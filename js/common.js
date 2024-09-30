@@ -552,7 +552,7 @@ $(document).ready(function () {
     });
     /*}}}*/
 
-    PHPSearchUI.init(getLanguage(), 30);
+    PHPSearchUI({ language: getLanguage(), language: 30 });
 
     /* {{{ Negative user notes fade-out */
     var usernotes = document.getElementById('usernotes');
