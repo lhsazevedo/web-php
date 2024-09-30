@@ -1,20 +1,8 @@
 const PHPSearch = (() => {
-    const DEBOUNCE_DELAY = 200;
     const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
     const CACHE_DAYS = 14;
-    const BRACES_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>';
-    const DOCUMENT_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>file-document-outline</title><path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" /></svg>';
 
-    // SVG icons
-    const parser = new DOMParser();
-    const bracesIcon = parser.parseFromString(
-        BRACES_ICON,
-        "image/svg+xml",
-    ).documentElement;
-    const documentIcon = parser.parseFromString(
-        DOCUMENT_ICON,
-        "image/svg+xml",
-    ).documentElement;
+    let fuzzyhound;
 
     /**
      * Processes a data structure in the format of our search-index.php
@@ -103,21 +91,6 @@ const PHPSearch = (() => {
     };
 
     /**
-     * Debounce function to limit the rate at which a function can fire.
-     *
-     * @param {Function} func The function to debounce.
-     * @param {Number} delay The debounce delay in milliseconds.
-     * @return {Function} The debounced function.
-     */
-    const debounce = (func, delay) => {
-        let timeoutId;
-        return (...args) => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func(...args), delay);
-        };
-    };
-
-    /**
      * Load language data with fallback to English.
      *
      * @param {string} language The language to load
@@ -136,6 +109,105 @@ const PHPSearch = (() => {
     };
 
     /**
+     * Perform a search with the given query and FuzzySearch instance.
+     *
+     * @param {String} query The search query.
+     * @returns {Array} The search results.
+     */
+    const search = (query) => {
+        return fuzzyhound
+            .search(query)
+            .map((result) => {
+                // Boost Language Reference matches.
+                if (result.item.id.startsWith("language")) {
+                    result.score += 10;
+                }
+                return result;
+            })
+            .sort((a, b) => b.score - a.score);
+    };
+
+    /**
+     * Initialize the search functionality.
+     *
+     * @param {Object} options The options object. This should include
+     *                         "language": the language to try to load,
+     *                         "limit": the maximum number of results
+     */
+    const init = async ({ language = "en", limit = 30 }) => {
+        const searchItems = await loadLanguageIndexWithFallback(language);
+
+        if (!searchItems) {
+            console.error("Failed to load any search index");
+            return;
+        }
+
+        fuzzyhound = new FuzzySearch({
+            source: searchItems,
+            token_sep: " \t.,-_",
+            score_test_fused: true,
+            keys: ["name", "methodName", "description"],
+            thresh_include: 5.0,
+            thresh_relative_to_best: 0.7,
+            bonus_match_start: 0.7,
+            bonus_token_order: 1.0,
+            bonus_position_decay: 0.3,
+            token_query_min_length: 1,
+            token_field_min_length: 2,
+            output_map: "root",
+        });
+    };
+
+    return { init, search };
+})();
+
+const PHPSearchUI = (() => {
+    const DEBOUNCE_DELAY = 200;
+    const BRACES_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>';
+    const DOCUMENT_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>file-document-outline</title><path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" /></svg>';
+
+    let searchModalContainer;
+    let searchModal;
+    let resultsContainer;
+    let searchInput;
+
+    // SVG icons
+    const parser = new DOMParser();
+    const bracesIcon = parser.parseFromString(
+        BRACES_ICON,
+        "image/svg+xml",
+    ).documentElement;
+    const documentIcon = parser.parseFromString(
+        DOCUMENT_ICON,
+        "image/svg+xml",
+    ).documentElement;
+
+    /**
+     * Update the selected result in the results container.
+     *
+     * @param {HTMLElement} resultsContainer
+     * @param {Number} selectedIndex
+     */
+    const updateSelectedResult = (resultsContainer, selectedIndex) => {
+        const results = resultsContainer.querySelectorAll(".php-search-result");
+        results.forEach((result, index) => {
+            result.setAttribute(
+                "aria-selected",
+                index === selectedIndex ? "true" : "false",
+            );
+            if (index !== selectedIndex) {
+                result.classList.remove("selected");
+                return;
+            }
+            result.classList.add("selected");
+            result.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+            });
+        });
+    };
+
+        /**
      * Utility function to safely create DOM elements with attributes and
      * children.
      *
@@ -226,85 +298,91 @@ const PHPSearch = (() => {
         });
     };
 
+    const openSearchModal = function () {
+        resultsContainer.innerHTML = '';
+
+        searchModalContainer.style.display = 'block';
+        searchModalContainer.setAttribute('aria-modal', 'true');
+        searchModalContainer.setAttribute('role', 'dialog');
+        // Force a reflow to make the transition work.
+        void searchModalContainer.offsetWidth;
+        searchModalContainer.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        searchInput.focus();
+        searchInput.value = '';
+    };
+
+    const hideSearchModal = function () {
+        searchModalContainer.classList.remove('show');
+        searchModalContainer.removeAttribute('aria-modal');
+        searchModalContainer.removeAttribute('role');
+        document.body.style.overflow = 'auto';
+        searchModalContainer.addEventListener(
+            'transitionend',
+            () => { searchModalContainer.style.display = 'none'; },
+            { once: true }
+        );
+    };
+
     /**
-     * Update the selected result in the results container.
+     * Debounce function to limit the rate at which a function can fire.
      *
-     * @param {HTMLElement} resultsContainer
-     * @param {Number} selectedIndex
+     * @param {Function} func The function to debounce.
+     * @param {Number} delay The debounce delay in milliseconds.
+     * @return {Function} The debounced function.
      */
-    const updateSelectedResult = (resultsContainer, selectedIndex) => {
-        const results = resultsContainer.querySelectorAll(".php-search-result");
-        results.forEach((result, index) => {
-            result.setAttribute(
-                "aria-selected",
-                index === selectedIndex ? "true" : "false",
-            );
-            if (index !== selectedIndex) {
-                result.classList.remove("selected");
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func(...args), delay);
+        };
+    };
+
+    const initModalDialog = (language, limit) => {
+        // Open the search modal when the search button is clicked
+        document.querySelectorAll(".php-navbar-search, .php-navbar-search-btn-mobile")
+            .forEach(button => button.addEventListener('click', openSearchModal));
+
+        // Close the search modal when the close button is clicked
+        document.querySelector(".php-search-close-btn").addEventListener('click', hideSearchModal);
+
+        // Close the search modal when the escape key is pressed
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                hideSearchModal();
+            }
+        });
+
+        // Close the search modal when the user clicks outside of it
+        searchModalContainer.addEventListener('click', function (event) {
+            if (event.target === searchModalContainer) {
+                hideSearchModal();
+            }
+        });
+
+        // Focus trap
+        document.addEventListener('keydown', function (event) {
+            if (event.key != 'Tab') {
                 return;
             }
-            result.classList.add("selected");
-            result.scrollIntoView({
-                behavior: "smooth",
-                block: "nearest",
-            });
-        });
-    };
 
-    /**
-     * Perform a search with the given query and FuzzySearch instance.
-     *
-     * @param {String} query The search query.
-     * @param {FuzzySearch} fuzzyhound The FuzzySearch instance.
-     * @returns {Array} The search results.
-     */
-    const search = (query, fuzzyhound) => {
-        return fuzzyhound
-            .search(query)
-            .map((result) => {
-                // Boost Language Reference matches.
-                if (result.item.id.startsWith("language")) {
-                    result.score += 10;
+            const selectable = searchModal.querySelectorAll('input, button, a')
+            const lastElement = selectable[selectable.length - 1];
+
+            if (event.shiftKey) {
+                if (document.activeElement === searchInput) {
+                    event.preventDefault();
+                    lastElement.focus();
                 }
-                return result;
-            })
-            .sort((a, b) => b.score - a.score);
-    };
-
-    /**
-     * Initialize the search functionality.
-     *
-     * @param {Object} options The options object. This should include
-     *                         "language": the language to try to load,
-     *                         "limit": the maximum number of results
-     */
-    const init = async ({ language = "en", limit = 30 }) => {
-        const resultsContainer = document.getElementById("php-search-results");
-        const searchInput = document.getElementById("php-search-input");
-
-        const searchItems = await loadLanguageIndexWithFallback(language);
-        if (!searchItems) {
-            console.error("Failed to load any search index");
-            return;
-        }
-
-        const fuzzyhound = new FuzzySearch({
-            source: searchItems,
-            token_sep: " \t.,-_",
-            score_test_fused: true,
-            keys: ["name", "methodName", "description"],
-            thresh_include: 5.0,
-            thresh_relative_to_best: 0.7,
-            bonus_match_start: 0.7,
-            bonus_token_order: 1.0,
-            bonus_position_decay: 0.3,
-            token_query_min_length: 1,
-            token_field_min_length: 2,
-            output_map: "root",
+            } else if (document.activeElement === lastElement) {
+                event.preventDefault();
+                searchInput.focus();
+            }
         });
 
         let selectedIndex = -1;
-
         const handleKeyDown = (event) => {
             const results =
                 resultsContainer.querySelectorAll(".php-search-result");
@@ -340,7 +418,7 @@ const PHPSearch = (() => {
         searchInput.addEventListener(
             "input",
             debounce(() => {
-                const result = search(searchInput.value, fuzzyhound);
+                const result = PHPSearch.search(searchInput.value);
                 renderResults(
                     result.slice(0, limit),
                     language,
@@ -353,6 +431,21 @@ const PHPSearch = (() => {
         );
 
         searchInput.addEventListener("keydown", handleKeyDown);
+    }
+
+    const init = (language, limit = 30) => {
+        searchModalContainer = document.getElementById("php-search-container");
+        searchModal = document.getElementById("php-search-dialog");
+        resultsContainer = document.getElementById("php-search-results");
+        searchInput = document.getElementById("php-search-input");
+
+        initModalDialog(language, limit);
+
+        // Initialize the search functionality
+        PHPSearch.init({
+            language,
+            limit
+        });
     };
 
     return { init };
