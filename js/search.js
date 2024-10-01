@@ -281,22 +281,23 @@ const initSearchUI = ({ language, limit = 30 }) => {
      */
     const renderResults = (results) => {
         const escape = (html) => {
-            var div = document.createElement('div');
-            var node = document.createTextNode(html)
+            var div = document.createElement("div");
+            var node = document.createTextNode(html);
             div.appendChild(node);
             return div.innerHTML;
         };
 
-        let resultsHtml = '';
+        let resultsHtml = "";
         results.forEach(({ item }, i) => {
             const icon = ["General", "Extension"].includes(item.type)
                 ? DOCUMENT_ICON
                 : BRACES_ICON;
             const link = `/manual/${encodeURIComponent(language)}/${encodeURIComponent(item.id)}.php`;
 
-            const description = (item.type !== "General")
-                ? `${item.type} • ${item.description}`
-                : item.description;
+            const description =
+                item.type !== "General"
+                    ? `${item.type} • ${item.description}`
+                    : item.description;
 
             resultsHtml += `
                 <a
@@ -317,7 +318,7 @@ const initSearchUI = ({ language, limit = 30 }) => {
                         </div>
                     </div>
                 </a>
-            `
+            `;
         });
 
         resultsElement.innerHTML = resultsHtml;
@@ -366,13 +367,9 @@ const initSearchUI = ({ language, limit = 30 }) => {
 
         const handleInput = (event) => {
             const results = PHPSearch.search(event.target.value);
-            renderResults(
-                results.slice(0, limit),
-                language,
-                resultsElement,
-            );
+            renderResults(results.slice(0, limit), language, resultsElement);
             selectedIndex = -1;
-        }
+        };
         const debouncedHandleInput = debounce(handleInput, DEBOUNCE_DELAY);
 
         inputElement.addEventListener("input", debouncedHandleInput);
