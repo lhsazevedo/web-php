@@ -113,7 +113,7 @@ const initPHPSearch = async (language) => {
             .sort((a, b) => b.score - a.score);
     };
 
-    const searchIndex = await loadLanguageIndexWithFallback(language)
+    const searchIndex = await loadLanguageIndexWithFallback(language);
     if (!searchIndex) {
         throw new Error("Failed to load search index");
     }
