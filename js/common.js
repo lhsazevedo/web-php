@@ -552,8 +552,11 @@ $(document).ready(function () {
     });
     /*}}}*/
 
+    const language = getLanguage();
     initSearchModal();
-    initSearchUI({ language: getLanguage(), limit: 30 });
+    initPHPSearch(language).then((searchCallback) => {
+        initSearchUI({language, searchCallback, limit: 30});
+    });
 
     /* {{{ Negative user notes fade-out */
     var usernotes = document.getElementById('usernotes');

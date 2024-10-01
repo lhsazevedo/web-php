@@ -1,15 +1,10 @@
-const PHPSearch = (() => {
+const initPHPSearch = async (language) => {
     const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
     const CACHE_DAYS = 14;
-
-    let fuzzyhound;
 
     /**
      * Processes a data structure in the format of our search-index.php
      * files and returns an array of search items.
-     *
-     * @param {Object} index
-     * @return {Array}
      */
     const processIndex = (index) => {
         return Object.entries(index)
@@ -55,9 +50,6 @@ const PHPSearch = (() => {
 
     /**
      * Attempt to asynchronously load the search JSON for a given language.
-     *
-     * @param {String}   language The language to search for.
-     * @return {Promise} A promise that resolves with the search items.
      */
     const loadLanguageIndex = async (language) => {
         const key = `search-${language}`;
@@ -92,9 +84,6 @@ const PHPSearch = (() => {
 
     /**
      * Load language data with fallback to English.
-     *
-     * @param {string} language The language to load
-     * @returns {Promise<Array>} The loaded search items
      */
     const loadLanguageIndexWithFallback = async (language) => {
         try {
@@ -110,11 +99,8 @@ const PHPSearch = (() => {
 
     /**
      * Perform a search with the given query and FuzzySearch instance.
-     *
-     * @param {String} query The search query.
-     * @returns {Array} The search results.
      */
-    const search = (query) => {
+    const search = (query, fuzzyhound) => {
         return fuzzyhound
             .search(query)
             .map((result) => {
@@ -127,41 +113,28 @@ const PHPSearch = (() => {
             .sort((a, b) => b.score - a.score);
     };
 
-    /**
-     * Initialize the search functionality.
-     *
-     * @param {Object} options The options object. This should include
-     *                         "language": the language to try to load,
-     *                         "limit": the maximum number of results
-     */
-    const init = async (language = "en") => {
-        const searchItems = await loadLanguageIndexWithFallback(language);
+    const searchIndex = await loadLanguageIndexWithFallback(language)
+    if (!searchIndex) {
+        throw new Error("Failed to load search index");
+    }
 
-        if (!searchItems) {
-            console.error("Failed to load any search index");
-            return;
-        }
+    fuzzyhound = new FuzzySearch({
+        source: searchIndex,
+        token_sep: " \t.,-_",
+        score_test_fused: true,
+        keys: ["name", "methodName", "description"],
+        thresh_include: 5.0,
+        thresh_relative_to_best: 0.7,
+        bonus_match_start: 0.7,
+        bonus_token_order: 1.0,
+        bonus_position_decay: 0.3,
+        token_query_min_length: 1,
+        token_field_min_length: 2,
+        output_map: "root",
+    });
 
-        fuzzyhound = new FuzzySearch({
-            source: searchItems,
-            token_sep: " \t.,-_",
-            score_test_fused: true,
-            keys: ["name", "methodName", "description"],
-            thresh_include: 5.0,
-            thresh_relative_to_best: 0.7,
-            bonus_match_start: 0.7,
-            bonus_token_order: 1.0,
-            bonus_position_decay: 0.3,
-            token_query_min_length: 1,
-            token_field_min_length: 2,
-            output_map: "root",
-        });
-
-        return (query) => search(query, fuzzyhound);
-    };
-
-    return { init, search };
-})();
+    return (query) => search(query, fuzzyhound);
+};
 
 const initSearchModal = () => {
     const backdropElement = document.getElementById("php-search-container");
@@ -243,7 +216,7 @@ const initSearchModal = () => {
     });
 };
 
-const initSearchUI = ({ language, limit = 30 }) => {
+const initSearchUI = ({ searchCallback, language, limit = 30 }) => {
     const DEBOUNCE_DELAY = 200;
     const BRACES_ICON =
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>';
@@ -332,50 +305,45 @@ const initSearchUI = ({ language, limit = 30 }) => {
         };
     };
 
-    const initSearchInput = () => {
-        const handleKeyDown = (event) => {
-            const resultsElements =
-                resultsElement.querySelectorAll(".php-search-result");
+    const handleKeyDown = (event) => {
+        const resultsElements =
+            resultsElement.querySelectorAll(".php-search-result");
 
-            switch (event.key) {
-                case "ArrowDown":
+        switch (event.key) {
+            case "ArrowDown":
+                event.preventDefault();
+                selectedIndex = Math.min(
+                    selectedIndex + 1,
+                    resultsElements.length - 1,
+                );
+                updateSelectedResult();
+                break;
+            case "ArrowUp":
+                event.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, -1);
+                updateSelectedResult();
+                break;
+            case "Enter":
+                if (selectedIndex !== -1) {
                     event.preventDefault();
-                    selectedIndex = Math.min(
-                        selectedIndex + 1,
-                        resultsElements.length - 1,
-                    );
-                    updateSelectedResult();
-                    break;
-                case "ArrowUp":
-                    event.preventDefault();
-                    selectedIndex = Math.max(selectedIndex - 1, -1);
-                    updateSelectedResult();
-                    break;
-                case "Enter":
-                    if (selectedIndex !== -1) {
-                        event.preventDefault();
-                        resultsElements[selectedIndex].click();
-                    } else {
-                        window.location.href = `/search.php?lang=${language}&q=${encodeURIComponent(inputElement.value)}`;
-                    }
-                    break;
-                case "Escape":
-                    selectedIndex = -1;
-                    break;
-            }
-        };
-
-        const handleInput = (event) => {
-            const results = PHPSearch.search(event.target.value);
-            renderResults(results.slice(0, limit), language, resultsElement);
-            selectedIndex = -1;
-        };
-        const debouncedHandleInput = debounce(handleInput, DEBOUNCE_DELAY);
-
-        inputElement.addEventListener("input", debouncedHandleInput);
-        inputElement.addEventListener("keydown", handleKeyDown);
+                    resultsElements[selectedIndex].click();
+                } else {
+                    window.location.href = `/search.php?lang=${language}&q=${encodeURIComponent(inputElement.value)}`;
+                }
+                break;
+            case "Escape":
+                selectedIndex = -1;
+                break;
+        }
     };
 
-    initSearchInput();
-    PHPSearch.init(language);
+    const handleInput = (event) => {
+        const results = searchCallback(event.target.value);
+        renderResults(results.slice(0, limit), language, resultsElement);
+        selectedIndex = -1;
+    };
+    const debouncedHandleInput = debounce(handleInput, DEBOUNCE_DELAY);
+
+    inputElement.addEventListener("input", debouncedHandleInput);
+    inputElement.addEventListener("keydown", handleKeyDown);
 };

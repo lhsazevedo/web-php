@@ -126,12 +126,12 @@ if (!empty($_SERVER['BASE_PAGE'])
     <div role="listbox" aria-label="Search results" id="php-search-results" class="php-search-results"></div>
     <div class="php-search-helper-text">
       <div>
-        <strong>↑ ↓</strong> to navigate •
-        <strong>Enter</strong> to select •
-        <strong>Esc</strong> to close
+        <span class="php-search-helper-key">↑ ↓</span> to navigate •
+        <span class="php-search-helper-key">Enter</span> to select •
+        <span class="php-search-helper-key">Esc</span> to close
       </div>
       <div>
-        Press <strong>Enter</strong> without selection to search using Google
+        Press <span class="php-search-helper-key">Enter</span> without selection to search using Google
       </div>
     </div>
   </div>

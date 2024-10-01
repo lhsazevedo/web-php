@@ -216,7 +216,7 @@ div.warning a:focus {
 
 .php-navbar-inner {
   display: flex;
-  padding: 12px 24px;
+  padding: 12px 16px;
   margin: 0 auto;
 }
 
@@ -330,7 +330,7 @@ div.warning a:focus {
 }
 
 .php-navbar-menu-btn-open {
-  margin-right: -12px;
+  margin-right: -8px;
 }
 
 .php-navbar-menu-btn-close {
