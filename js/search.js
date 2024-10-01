@@ -156,50 +156,113 @@ const PHPSearch = (() => {
             token_field_min_length: 2,
             output_map: "root",
         });
+
+        return (query) => search(query, fuzzyhound);
     };
 
     return { init, search };
 })();
 
-const PHPSearchUI = ({ language, limit = 30 }) => {
+const initSearchModal = () => {
+    const backdropElement = document.getElementById("php-search-container");
+    const dialogElement = document.getElementById("php-search-dialog");
+    const resultsElement = document.getElementById("php-search-results");
+    const inputElement = document.getElementById("php-search-input");
+
+    const show = function () {
+        resultsElement.innerHTML = "";
+
+        backdropElement.style.display = "block";
+        backdropElement.setAttribute("aria-modal", "true");
+        backdropElement.setAttribute("role", "dialog");
+        // Force a reflow to make the transition work.
+        void backdropElement.offsetWidth;
+        backdropElement.classList.add("show");
+        document.body.style.overflow = "hidden";
+
+        inputElement.focus();
+        inputElement.value = "";
+    };
+
+    const hide = function () {
+        backdropElement.classList.remove("show");
+        backdropElement.removeAttribute("aria-modal");
+        backdropElement.removeAttribute("role");
+        document.body.style.overflow = "auto";
+        backdropElement.addEventListener(
+            "transitionend",
+            () => {
+                backdropElement.style.display = "none";
+            },
+            { once: true },
+        );
+    };
+
+    // Open the search modal when the search button is clicked
+    document
+        .querySelectorAll(".php-navbar-search, .php-navbar-search-btn-mobile")
+        .forEach((button) => button.addEventListener("click", show));
+
+    // Close the search modal when the close button is clicked
+    document
+        .querySelector(".php-search-close-btn")
+        .addEventListener("click", hide);
+
+    // Close the search modal when the escape key is pressed
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            hide();
+        }
+    });
+
+    // Close the search modal when the user clicks outside of it
+    backdropElement.addEventListener("click", function (event) {
+        if (event.target === backdropElement) {
+            hide();
+        }
+    });
+
+    // Focus trap
+    document.addEventListener("keydown", function (event) {
+        if (event.key != "Tab") {
+            return;
+        }
+
+        const selectable = dialogElement.querySelectorAll("input, button, a");
+        const lastElement = selectable[selectable.length - 1];
+
+        if (event.shiftKey) {
+            if (document.activeElement === inputElement) {
+                event.preventDefault();
+                lastElement.focus();
+            }
+        } else if (document.activeElement === lastElement) {
+            event.preventDefault();
+            inputElement.focus();
+        }
+    });
+};
+
+const initSearchUI = ({ language, limit = 30 }) => {
     const DEBOUNCE_DELAY = 200;
     const BRACES_ICON =
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>';
     const DOCUMENT_ICON =
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>file-document-outline</title><path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" /></svg>';
 
-    const searchModalContainer = document.getElementById(
-        "php-search-container",
-    );
-    const searchModal = document.getElementById("php-search-dialog");
-    const resultsContainer = document.getElementById("php-search-results");
-    const searchInput = document.getElementById("php-search-input");
-
-    // SVG icons
-    const parser = new DOMParser();
-    const bracesIcon = parser.parseFromString(
-        BRACES_ICON,
-        "image/svg+xml",
-    ).documentElement;
-    const documentIcon = parser.parseFromString(
-        DOCUMENT_ICON,
-        "image/svg+xml",
-    ).documentElement;
+    const resultsElement = document.getElementById("php-search-results");
+    const inputElement = document.getElementById("php-search-input");
+    let selectedIndex = -1;
 
     /**
      * Update the selected result in the results container.
-     *
-     * @param {HTMLElement} resultsContainer
-     * @param {Number} selectedIndex
      */
-    const updateSelectedResult = (resultsContainer, selectedIndex) => {
-        const results = resultsContainer.querySelectorAll(".php-search-result");
+    const updateSelectedResult = () => {
+        const results = resultsElement.querySelectorAll(".php-search-result");
         results.forEach((result, index) => {
-            result.setAttribute(
-                "aria-selected",
-                index === selectedIndex ? "true" : "false",
-            );
-            if (index !== selectedIndex) {
+            const isSelected = index === selectedIndex;
+            result.setAttribute("aria-selected", isSelected ? "true" : "false");
+            if (!isSelected) {
                 result.classList.remove("selected");
                 return;
             }
@@ -212,132 +275,54 @@ const PHPSearchUI = ({ language, limit = 30 }) => {
     };
 
     /**
-     * Utility function to safely create DOM elements with attributes and
-     * children.
-     *
-     * @param {String} tag The tag name of the element.
-     * @param {Object} attrs The attributes to set on the element.
-     * @param {Array} children The children of the element.
-     * @returns {HTMLElement} The created element.
-     */
-    const el = (tag, attrs = {}, children = []) => {
-        const element = document.createElement(tag);
-
-        for (const attr in attrs) {
-            if (attr === "className") {
-                element.className = attrs[attr];
-                continue;
-            }
-            element.setAttribute(attr, attrs[attr]);
-        }
-
-        for (const child of children) {
-            if (typeof child === "string") {
-                element.appendChild(document.createTextNode(child));
-                continue;
-            }
-            if (child instanceof Node) {
-                element.appendChild(child);
-                continue;
-            }
-            throw new Error("Unsupported child type");
-        }
-
-        return element;
-    };
-
-    /**
      * Render the search results.
      *
      * @param {Array} results The search results.
-     * @param {HTMLElement} container The container to render the results in.
      */
-    const renderResults = (results, language, container) => {
-        container.innerHTML = "";
+    const renderResults = (results) => {
+        const escape = (html) => {
+            var div = document.createElement('div');
+            var node = document.createTextNode(html)
+            div.appendChild(node);
+            return div.innerHTML;
+        };
+
+        let resultsHtml = '';
         results.forEach(({ item }, i) => {
             const icon = ["General", "Extension"].includes(item.type)
-                ? documentIcon
-                : bracesIcon;
+                ? DOCUMENT_ICON
+                : BRACES_ICON;
             const link = `/manual/${encodeURIComponent(language)}/${encodeURIComponent(item.id)}.php`;
 
-            const resultElement = el(
-                "a",
-                {
-                    href: link,
-                    className: "php-search-result",
-                    role: "option",
-                    "aria-labelledby": `php-search-result-name-${i}`,
-                    "aria-describedby": `php-search-result-desc-${i}`,
-                    "aria-selected": "false",
-                },
-                [
-                    el("div", { className: "php-search-result-icon" }, [
-                        icon.cloneNode(true),
-                    ]),
-                    el("div", { className: "php-search-result-main" }, [
-                        el(
-                            "div",
-                            {
-                                id: `php-search-result-name-${i}`,
-                                className: "php-search-result-name",
-                            },
-                            [item.name],
-                        ),
-                        el(
-                            "div",
-                            {
-                                id: `php-search-result-desc-${i}`,
-                                className: "php-search-result-desc",
-                            },
-                            [
-                                item.type !== "General" && `${item.type} • `,
-                                item.description,
-                            ],
-                        ),
-                    ]),
-                ],
-            );
+            const description = (item.type !== "General")
+                ? `${item.type} • ${item.description}`
+                : item.description;
 
-            container.appendChild(resultElement);
+            resultsHtml += `
+                <a
+                    href="${link}"
+                    class="php-search-result"
+                    role="option"
+                    aria-labelledby="php-search-result-name-${i}"
+                    aria-describedby="php-search-result-desc-${i}"
+                    aria-selected="false"
+                >
+                    <div class="php-search-result-icon">${icon}</div>
+                    <div class="php-search-result-main">
+                        <div id="php-search-result-name-${i}" class="php-search-result-name">
+                            ${escape(item.name)}
+                        </div>
+                        <div id="php-search-result-desc-${i}" class="php-search-result-desc">
+                            ${escape(description)}
+                        </div>
+                    </div>
+                </a>
+            `
         });
+
+        resultsElement.innerHTML = resultsHtml;
     };
 
-    const openSearchModal = function () {
-        resultsContainer.innerHTML = "";
-
-        searchModalContainer.style.display = "block";
-        searchModalContainer.setAttribute("aria-modal", "true");
-        searchModalContainer.setAttribute("role", "dialog");
-        // Force a reflow to make the transition work.
-        void searchModalContainer.offsetWidth;
-        searchModalContainer.classList.add("show");
-        document.body.style.overflow = "hidden";
-
-        searchInput.focus();
-        searchInput.value = "";
-    };
-
-    const hideSearchModal = function () {
-        searchModalContainer.classList.remove("show");
-        searchModalContainer.removeAttribute("aria-modal");
-        searchModalContainer.removeAttribute("role");
-        document.body.style.overflow = "auto";
-        searchModalContainer.addEventListener(
-            "transitionend",
-            () => {
-                searchModalContainer.style.display = "none";
-            },
-            { once: true },
-        );
-    };
-
-    /**
-     * Debounce function to limit the rate at which a function can fire.
-     *
-     * @param {Function} func The function to debounce.
-     * @param {Number} delay The debounce delay in milliseconds.
-     * @return {Function} The debounced function.
-     */
     const debounce = (func, delay) => {
         let timeoutId;
         return (...args) => {
@@ -346,80 +331,31 @@ const PHPSearchUI = ({ language, limit = 30 }) => {
         };
     };
 
-    const initModalDialog = (language, limit) => {
-        // Open the search modal when the search button is clicked
-        document
-            .querySelectorAll(
-                ".php-navbar-search, .php-navbar-search-btn-mobile",
-            )
-            .forEach((button) =>
-                button.addEventListener("click", openSearchModal),
-            );
-
-        // Close the search modal when the close button is clicked
-        document
-            .querySelector(".php-search-close-btn")
-            .addEventListener("click", hideSearchModal);
-
-        // Close the search modal when the escape key is pressed
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape") {
-                hideSearchModal();
-            }
-        });
-
-        // Close the search modal when the user clicks outside of it
-        searchModalContainer.addEventListener("click", function (event) {
-            if (event.target === searchModalContainer) {
-                hideSearchModal();
-            }
-        });
-
-        // Focus trap
-        document.addEventListener("keydown", function (event) {
-            if (event.key != "Tab") {
-                return;
-            }
-
-            const selectable = searchModal.querySelectorAll("input, button, a");
-            const lastElement = selectable[selectable.length - 1];
-
-            if (event.shiftKey) {
-                if (document.activeElement === searchInput) {
-                    event.preventDefault();
-                    lastElement.focus();
-                }
-            } else if (document.activeElement === lastElement) {
-                event.preventDefault();
-                searchInput.focus();
-            }
-        });
-
-        let selectedIndex = -1;
+    const initSearchInput = () => {
         const handleKeyDown = (event) => {
-            const results =
-                resultsContainer.querySelectorAll(".php-search-result");
+            const resultsElements =
+                resultsElement.querySelectorAll(".php-search-result");
 
             switch (event.key) {
                 case "ArrowDown":
                     event.preventDefault();
                     selectedIndex = Math.min(
                         selectedIndex + 1,
-                        results.length - 1,
+                        resultsElements.length - 1,
                     );
-                    updateSelectedResult(resultsContainer, selectedIndex);
+                    updateSelectedResult();
                     break;
                 case "ArrowUp":
                     event.preventDefault();
                     selectedIndex = Math.max(selectedIndex - 1, -1);
-                    updateSelectedResult(resultsContainer, selectedIndex);
+                    updateSelectedResult();
                     break;
                 case "Enter":
                     if (selectedIndex !== -1) {
                         event.preventDefault();
-                        results[selectedIndex].click();
+                        resultsElements[selectedIndex].click();
                     } else {
-                        window.location.href = `/search.php?lang=${language}&q=${encodeURIComponent(searchInput.value)}`;
+                        window.location.href = `/search.php?lang=${language}&q=${encodeURIComponent(inputElement.value)}`;
                     }
                     break;
                 case "Escape":
@@ -428,24 +364,21 @@ const PHPSearchUI = ({ language, limit = 30 }) => {
             }
         };
 
-        searchInput.addEventListener(
-            "input",
-            debounce(() => {
-                const result = PHPSearch.search(searchInput.value);
-                renderResults(
-                    result.slice(0, limit),
-                    language,
-                    resultsContainer,
-                );
-                selectedIndex = -1;
-                resultsContainer.setAttribute("role", "listbox");
-                resultsContainer.setAttribute("aria-label", "Search results");
-            }, DEBOUNCE_DELAY),
-        );
+        const handleInput = (event) => {
+            const results = PHPSearch.search(event.target.value);
+            renderResults(
+                results.slice(0, limit),
+                language,
+                resultsElement,
+            );
+            selectedIndex = -1;
+        }
+        const debouncedHandleInput = debounce(handleInput, DEBOUNCE_DELAY);
 
-        searchInput.addEventListener("keydown", handleKeyDown);
+        inputElement.addEventListener("input", debouncedHandleInput);
+        inputElement.addEventListener("keydown", handleKeyDown);
     };
 
-    initModalDialog(language, limit);
+    initSearchInput();
     PHPSearch.init(language);
 };
