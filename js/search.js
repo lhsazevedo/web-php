@@ -173,7 +173,7 @@ const initSearchModal = () => {
 
     // Open the search modal when the search button is clicked
     document
-        .querySelectorAll(".php-navbar-search, .php-navbar-search-btn-mobile")
+        .querySelectorAll(".php-navbar-search-btn, .php-navbar-search-btn-mobile")
         .forEach((button) => button.addEventListener("click", show));
 
     // Close the search modal when the close button is clicked

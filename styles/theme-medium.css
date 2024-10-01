@@ -182,28 +182,7 @@ div.warning a:focus {
 }
 /* }}} */
 
-.php-navbar-search {
-  background-color: #404F82;
-  color: #B4BFF3;
-  border: 1px solid #6A78BE;
-  border-radius: 8px;
-  padding: 8px 12px;
-  text-align: left;
-}
-
-.php-navbar-search:focus {
-  border-width: 1px;
-  border-color: #94A3ED;
-  outline: none;
-}
-
-.php-navbar-search .tt-hint {
-  color: #7c8bd6;
-}
-
-/* }}} */
-
-/* {{{ 2023 Navbar */
+/* {{{ 2024 Navbar */
 
 .php-navbar {
   background-color: var(--dark-blue-color);
@@ -265,7 +244,7 @@ div.warning a:focus {
   flex-grow: 1;
 }
 
-.php-navbar-search {
+.php-navbar-search-btn {
   flex-grow: 1;
   max-width: 300px;
 }
@@ -274,6 +253,21 @@ div.warning a:focus {
   flex-grow: 1;
   display: flex;
   justify-content: end;
+}
+
+.php-navbar-search-btn {
+  background-color: #404F82;
+  color: #B4BFF3;
+  border: 1px solid #6A78BE;
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.php-navbar-search-btn:hover {
+  border-width: 1px;
+  border-color: #94A3ED;
+  outline: none;
 }
 
 .php-navbar-backdrop {
@@ -393,7 +387,7 @@ div.warning a:focus {
     font-size: 18px;
   }
 
-  .php-navbar-search {
+  .php-navbar-search-btn {
     display: none;
     flex-grow: 0;
     margin: 0;
@@ -409,7 +403,7 @@ div.warning a:focus {
     display: none;
   }
 
-  .php-navbar-search {
+  .php-navbar-search-btn {
     display: block;
   }
 }

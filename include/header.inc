@@ -133,7 +133,7 @@ function toggleMenu() {
     </div>
 
     <div class="php-navbar-right">
-        <button class="php-navbar-search">Search</button>
+        <button class="php-navbar-search-btn">Search</button>
 
         <button aria-label="Search" class="php-navbar-search-btn-mobile">
           <!-- https://feathericons.com -->
