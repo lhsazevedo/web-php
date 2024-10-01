@@ -161,12 +161,16 @@ const PHPSearch = (() => {
     return { init, search };
 })();
 
-const PHPSearchUI = ({language, limit = 30}) => {
+const PHPSearchUI = ({ language, limit = 30 }) => {
     const DEBOUNCE_DELAY = 200;
-    const BRACES_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>';
-    const DOCUMENT_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>file-document-outline</title><path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" /></svg>';
+    const BRACES_ICON =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>code-braces</title><path d="M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z" /></svg>';
+    const DOCUMENT_ICON =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>file-document-outline</title><path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" /></svg>';
 
-    const searchModalContainer = document.getElementById("php-search-container");
+    const searchModalContainer = document.getElementById(
+        "php-search-container",
+    );
     const searchModal = document.getElementById("php-search-dialog");
     const resultsContainer = document.getElementById("php-search-results");
     const searchInput = document.getElementById("php-search-input");
@@ -299,29 +303,31 @@ const PHPSearchUI = ({language, limit = 30}) => {
     };
 
     const openSearchModal = function () {
-        resultsContainer.innerHTML = '';
+        resultsContainer.innerHTML = "";
 
-        searchModalContainer.style.display = 'block';
-        searchModalContainer.setAttribute('aria-modal', 'true');
-        searchModalContainer.setAttribute('role', 'dialog');
+        searchModalContainer.style.display = "block";
+        searchModalContainer.setAttribute("aria-modal", "true");
+        searchModalContainer.setAttribute("role", "dialog");
         // Force a reflow to make the transition work.
         void searchModalContainer.offsetWidth;
-        searchModalContainer.classList.add('show');
-        document.body.style.overflow = 'hidden';
+        searchModalContainer.classList.add("show");
+        document.body.style.overflow = "hidden";
 
         searchInput.focus();
-        searchInput.value = '';
+        searchInput.value = "";
     };
 
     const hideSearchModal = function () {
-        searchModalContainer.classList.remove('show');
-        searchModalContainer.removeAttribute('aria-modal');
-        searchModalContainer.removeAttribute('role');
-        document.body.style.overflow = 'auto';
+        searchModalContainer.classList.remove("show");
+        searchModalContainer.removeAttribute("aria-modal");
+        searchModalContainer.removeAttribute("role");
+        document.body.style.overflow = "auto";
         searchModalContainer.addEventListener(
-            'transitionend',
-            () => { searchModalContainer.style.display = 'none'; },
-            { once: true }
+            "transitionend",
+            () => {
+                searchModalContainer.style.display = "none";
+            },
+            { once: true },
         );
     };
 
@@ -342,33 +348,40 @@ const PHPSearchUI = ({language, limit = 30}) => {
 
     const initModalDialog = (language, limit) => {
         // Open the search modal when the search button is clicked
-        document.querySelectorAll(".php-navbar-search, .php-navbar-search-btn-mobile")
-            .forEach(button => button.addEventListener('click', openSearchModal));
+        document
+            .querySelectorAll(
+                ".php-navbar-search, .php-navbar-search-btn-mobile",
+            )
+            .forEach((button) =>
+                button.addEventListener("click", openSearchModal),
+            );
 
         // Close the search modal when the close button is clicked
-        document.querySelector(".php-search-close-btn").addEventListener('click', hideSearchModal);
+        document
+            .querySelector(".php-search-close-btn")
+            .addEventListener("click", hideSearchModal);
 
         // Close the search modal when the escape key is pressed
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
                 hideSearchModal();
             }
         });
 
         // Close the search modal when the user clicks outside of it
-        searchModalContainer.addEventListener('click', function (event) {
+        searchModalContainer.addEventListener("click", function (event) {
             if (event.target === searchModalContainer) {
                 hideSearchModal();
             }
         });
 
         // Focus trap
-        document.addEventListener('keydown', function (event) {
-            if (event.key != 'Tab') {
+        document.addEventListener("keydown", function (event) {
+            if (event.key != "Tab") {
                 return;
             }
 
-            const selectable = searchModal.querySelectorAll('input, button, a')
+            const selectable = searchModal.querySelectorAll("input, button, a");
             const lastElement = selectable[selectable.length - 1];
 
             if (event.shiftKey) {
@@ -431,7 +444,7 @@ const PHPSearchUI = ({language, limit = 30}) => {
         );
 
         searchInput.addEventListener("keydown", handleKeyDown);
-    }
+    };
 
     initModalDialog(language, limit);
     PHPSearch.init(language);
