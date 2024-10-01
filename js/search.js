@@ -134,7 +134,7 @@ const PHPSearch = (() => {
      *                         "language": the language to try to load,
      *                         "limit": the maximum number of results
      */
-    const init = async ({ language = "en", limit = 30 }) => {
+    const init = async (language = "en") => {
         const searchItems = await loadLanguageIndexWithFallback(language);
 
         if (!searchItems) {
@@ -207,7 +207,7 @@ const PHPSearchUI = ({language, limit = 30}) => {
         });
     };
 
-        /**
+    /**
      * Utility function to safely create DOM elements with attributes and
      * children.
      *
@@ -434,8 +434,5 @@ const PHPSearchUI = ({language, limit = 30}) => {
     }
 
     initModalDialog(language, limit);
-    PHPSearch.init({
-        language,
-        limit
-    });
+    PHPSearch.init(language);
 };
